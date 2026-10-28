@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sassafras Spec Cards</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#241d17">
+<link rel="manifest" href="manifest.json">
+<!-- iOS home screen support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spec Cards">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1712;
+    --wood:#241d17;
+    --wood-2:#2e251c;
+    --parchment:#f3e9d4;
+    --parchment-2:#ece0c6;
+    --copper:#b8733d;
+    --copper-bright:#d68a4c;
+    --amber:#c17817;
+    --sage:#6f7a5e;
+    --line: rgba(28,23,18,0.18);
+    --shadow: rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, #33291d 0%, transparent 55%),
+      radial-gradient(ellipse at bottom right, #2b2118 0%, transparent 55%),
+      var(--wood);
+    color:var(--parchment);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+
+  .brand{
+    text-align:center;
+    margin-bottom:18px;
+  }
+  .brand .eyebrow{
+    font-size:11px;
+    letter-spacing:0.3em;
+    color:var(--copper-bright);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-style:italic;
+    font-size:clamp(28px,5vw,42px);
+    margin:0;
+    color:var(--parchment);
+    letter-spacing:0.01em;
+  }
+  .brand .sub{
+    font-size:12px;
+    color:rgba(243,233,212,0.55);
+    margin-top:6px;
+    letter-spacing:0.04em;
+  }
+
+  .controls{
+    width:100%;
+    max-width:560px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    margin-bottom:20px;
+  }
+  .chip{
+    background:transparent;
+    border:1px solid rgba(243,233,212,0.25);
+    color:rgba(243,233,212,0.75);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:6px 12px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .chip:hover{border-color:var(--copper-bright); color:var(--parchment);}
+  .chip.active{
+    background:var(--copper);
+    border-color:var(--copper);
+    color:var(--ink);
+    font-weight:600;
+  }
+
+  .stage{
+    width:100%;
+    max-width:420px;
+    perspective:1600px;
+  }
+
+  .counter{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(243,233,212,0.5);
+    margin-bottom:10px;
+    padding:0 4px;
+  }
+  .counter span.num{ color:var(--copper-bright); font-weight:600; }
+
+  .card{
+    position:relative;
+    width:100%;
+    aspect-ratio: 5 / 6.6;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform .55s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{ transform: rotateY(180deg); }
+
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:6px;
+    background:var(--parchment);
+    color:var(--ink);
+    box-shadow: 0 18px 40px var(--shadow), 0 2px 0 rgba(255,255,255,0.4) inset;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    display:flex;
+    flex-direction:column;
+  }
+  .face::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(28,23,18,0.05) 28px);
+    pointer-events:none;
+  }
+  .face .hole{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:34px; height:8px; border-radius:6px;
+    background:rgba(28,23,18,0.08);
+    border:1px solid rgba(28,23,18,0.15);
+  }
+
+  .front{
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:40px 26px;
+  }
+  .front .tag{
+    font-size:10px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--copper);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  .front h2{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(24px,6vw,34px);
+    line-height:1.08;
+    margin:0 0 16px;
+  }
+  .front .glass{
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:rgba(28,23,18,0.55);
+    border-top:1px solid var(--line);
+    padding-top:12px;
+    margin-top:6px;
+  }
+  .front .flip-hint{
+    position:absolute;
+    bottom:16px;
+    font-size:9px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:rgba(28,23,18,0.35);
+  }
+
+  .back{
+    transform: rotateY(180deg);
+    padding:34px 24px 20px;
+  }
+  .back .b-tag{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--copper);
+    font-weight:600;
+    margin-bottom:2px;
+  }
+  .back h3{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-style:italic;
+    font-size:20px;
+    margin:0 0 12px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+  }
+  .back .ingredients{
+    list-style:none;
+    margin:0 0 12px;
+    padding:0;
+    font-size:12.5px;
+    line-height:1.55;
+    flex:0 0 auto;
+  }
+  .back .ingredients li{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    border-bottom:1px dashed rgba(28,23,18,0.15);
+    padding:3px 0;
+  }
+  .back .ingredients li .amt{
+    color:var(--amber);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .back .build{
+    font-size:11px;
+    line-height:1.55;
+    color:rgba(28,23,18,0.8);
+    overflow-y:auto;
+    padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+  .back .build .lbl{
+    color:var(--sage);
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    font-size:9.5px;
+    display:block;
+    margin-bottom:4px;
+  }
+
+  .star-btn{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:20px;
+    line-height:1;
+    color:rgba(28,23,18,0.25);
+    transition:transform .15s ease, color .15s ease;
+    padding:4px;
+  }
+  .star-btn:hover{ transform:scale(1.15); }
+  .star-btn.on{ color:var(--amber); }
+
+  .fav-toggle{
+    background:transparent;
+    border:1px solid var(--amber);
+    color:var(--amber);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:6px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .15s ease;
+    margin-bottom:14px;
+  }
+  .fav-toggle:hover{ background:rgba(193,120,23,0.15); }
+  .fav-toggle.on{ background:var(--amber); color:var(--ink); font-weight:600; }
+  .fav-toggle .n{ opacity:0.7; margin-left:4px; }
+
+  .empty-state{
+    text-align:center;
+    color:rgba(243,233,212,0.5);
+    font-size:13px;
+    line-height:1.6;
+    padding:60px 20px;
+  }
+
+  .navrow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-top:22px;
+  }
+  .navbtn{
+    background:var(--wood-2);
+    border:1px solid rgba(243,233,212,0.2);
+    color:var(--parchment);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:10px 16px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .navbtn:hover{ background:var(--copper); color:var(--ink); border-color:var(--copper); }
+  .navbtn.icon{ padding:10px 14px; font-size:16px; line-height:1; }
+  .navbtn:disabled{ opacity:0.3; cursor:not-allowed; }
+  .navbtn:disabled:hover{ background:var(--wood-2); color:var(--parchment); border-color:rgba(243,233,212,0.2); }
+
+  @media (max-width:480px){
+    .back .ingredients{ font-size:11.5px; }
+    .back h3{ font-size:18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <div class="eyebrow">Sassafras · Behind the Bar</div>
+  <h1>Spec Cards</h1>
+  <div class="sub">Tap a card to flip · 59 builds</div>
+</div>
+
+<div class="controls" id="filters"></div>
+
+<button class="fav-toggle" id="favToggle">☆ Favorites Only <span class="n" id="favCount">(0)</span></button>
+<button class="fav-toggle" id="resetFav" style="border-color:rgba(243,233,212,0.25); color:rgba(243,233,212,0.55); margin-left:8px;">Clear Favorites</button>
+
+<div class="stage">
+  <div class="counter">
+    <span id="catLabel">All</span>
+    <span><span class="num" id="idxNum">1</span> / <span id="idxTotal">59</span></span>
+  </div>
+  <div class="card" id="card">
+    <div class="face front">
+      <div class="hole"></div>
+      <button class="star-btn" id="starFront">☆</button>
+      <div class="tag" id="fTag">Gin</div>
+      <h2 id="fName">Aviation</h2>
+      <div class="glass" id="fGlass">Coupe</div>
+      <div class="flip-hint">tap to flip</div>
+    </div>
+    <div class="face back">
+      <div class="hole"></div>
+      <button class="star-btn" id="starBack">☆</button>
+      <div class="b-tag" id="bTag">Gin</div>
+      <h3 id="bName">Aviation</h3>
+      <ul class="ingredients" id="bIng"></ul>
+      <div class="build"><span class="lbl">Build</span><span id="bBuild"></span></div>
+    </div>
+  </div>
+  <div class="navrow">
+    <button class="navbtn icon" id="prevBtn">‹</button>
+    <button class="navbtn" id="shuffleBtn">Shuffle</button>
+    <button class="navbtn icon" id="nextBtn">›</button>
+  </div>
+</div>
+
+<script>
+const DATA = [
+{cat:"Tequila & Mezcal", glass:"Coupe", name:"Mexican Firing Squad", ing:[["2 oz","Common Silver Tequila"],["1 oz","Lime Juice"],[".5 oz","Jalapeño Syrup"],[".25 oz","Grenadine"]], build:"Shaken. Double strain. Coupe. Lime chip."},
+{cat:"Tequila & Mezcal", glass:"Collins Glass", name:"Paloma", ing:[["1.5 oz","Olmeca Altos Plata Tequila"],[".5 oz","Jalapeño Syrup"],[".5 oz","Ruby Red Grapefruit Juice"],[".5 oz","Lime Juice"],["2 oz","San Pellegrino Pompelmo Soda"]], build:"Build in Collins glass with salted rim. Short stir. Lime chip."},
+{cat:"Tequila & Mezcal", glass:"Rocks Glass", name:"Oaxaca Old Fashion", ing:[["1 oz","Catedral Espadín Mezcal"],[".5 oz","El Jimador Reposado Tequila"],[".5 oz","Ancho Reyes Chile Poblano Liqueur"],["1 tsp","Cherry Infused Brandy"],[".25 oz","Jalapeño Syrup"],["3 dash","Aztec Chocolate Bitters"]], build:"Muddle orange wedge and cherry in mixing glass, add ingredients and stir. Double strain over fresh ice in rocks glass. Lime chip with skewered cherry."},
+{cat:"Tequila & Mezcal", glass:"Goblet", name:"Margarita on Fire", ing:[["1.5 oz","Catedral Espadín Mezcal"],[".5 oz","Ancho Reyes Verde Liqueur"],[".5 oz","Lime Juice"],["1 oz","Pineapple Juice"],[".75 oz","Honey Syrup"],["1 dash","Habanero Bitters"]], build:"Shaken, dump into goblet glass (habanero bitters in glass first), salted Tajín rim. Lime chip."},
+{cat:"Tequila & Mezcal", glass:"Goblet", name:"Classic Margarita", ing:[["1.5 oz","Jose Cuervo Gold Tequila"],["1.5 oz","Cointreau Liqueur"],["1 oz","Lime Juice"]], build:"Shaken and dump into goblet glass. Salted rim. Lime chip."},
+{cat:"Tequila & Mezcal", glass:"Coupe", name:"Jalisco Pear", ing:[["1.5 oz","Olmeca Altos Plata Tequila"],["1 oz","Belle De Brillet Pear Liqueur"],[".5 oz","Rothman & Winter Orchard Pear Liqueur"],[".25 oz","St. Elizabeth Allspice Dram"],[".5 oz","Lemon Juice"]], build:"Shaken, double strain. Coupe. Lemon chip."},
+{cat:"Tequila & Mezcal", glass:"Nick & Nora", name:"Naked & Famous", ing:[["1 oz","Catedral Espadín Mezcal"],["1 oz","Aperol"],["1 oz","Yellow Chartreuse"],["1 oz","Lime Juice"]], build:"Shaken. Double strain. Nick & Nora. Lime chip."},
+{cat:"Tequila & Mezcal", glass:"Rocks Glass", name:"Snake Eyes", ing:[["1.5 oz","Catedral Espadín Mezcal"],["1 tsp","Tempus Fugit Crème De Banane"],["2 oz","Organic Coconut Water"],[".25 oz","Lime Juice"],[".5 oz","Pure Cane Syrup"]], build:"Shaken. Double strain over fresh ice into rocks glass with salted rim and lime chip."},
+
+{cat:"Mules", glass:"Copper Cup", name:"Moscow Mule", ing:[["2 oz","Faber Vanilla Vodka"],[".75 oz","Ginger Press"],[".5 oz","Lime Juice"],[".5 oz","Simple Syrup"],["2 oz","Ginger Ale"]], build:"Build in copper cup. Short stir. Lime chip."},
+{cat:"Mules", glass:"Copper Cup", name:"Mexican Mule", ing:[["1.5 oz","Catedral Espadín Mezcal"],[".5 oz","El Jimador Reposado Tequila"],[".75 oz","Ginger Press"],[".5 oz","Jalapeño Syrup"],[".5 oz","Lime Juice"],["2 oz","Ginger Ale"]], build:"Build in copper cup. Short stir. Lime chip."},
+{cat:"Mules", glass:"Copper Cup", name:"Kentucky Mule", ing:[["2 oz","Jack Daniels Whiskey"],[".75 oz","Ginger Press"],[".5 oz","Lime Juice"],[".5 oz","Simple Syrup"],["2 oz","Ginger Ale"]], build:"Build in copper cup. Short stir. Lime chip."},
+{cat:"Mules", glass:"Copper Cup", name:"Celtic Mule", ing:[["2 oz","Tullamore Dew Whiskey"],[".75 oz","Ginger Press"],[".5 oz","Lime Juice"],[".5 oz","Simple Syrup"],["2 oz","Ginger Ale"]], build:"Build in copper cup. Short stir. Lime chip."},
+{cat:"Mules", glass:"Copper Cup", name:"London Mule", ing:[["2 oz","Beefeater Gin"],[".75 oz","Ginger Press"],[".5 oz","Lime Juice"],[".5 oz","Simple Syrup"],["2 oz","Ginger Ale"]], build:"Build in copper cup. Short stir. Lime chip."},
+
+{cat:"Vodka", glass:"Nick & Nora / Glencairn", name:"Pornstar Martini", ing:[["1.5 oz","Faber Vanilla Vodka"],[".5 oz","Chinola Passion Fruit Liqueur"],["1 oz","Passion Fruit Puree"],[".5 oz","Vanilla Simple Syrup"],[".5 oz","Lime Juice"],["2 oz","Champagne Sidecar"]], build:"Batch cocktail. Shake 4 oz, strain into Nick & Nora. Serve 2 oz champagne sidecar in Glencairn."},
+{cat:"Vodka", glass:"Nick & Nora", name:"Pomegranate Martini", ing:[["2 oz","Faber Pomegranate Vodka"],["1 oz","Cointreau Liqueur"],["1 oz","Pomegranate Juice"],[".5 oz","Lime Juice"]], build:"Batch cocktail. Shake 4 oz, double strain into Nick & Nora. Orange chip."},
+{cat:"Vodka", glass:"Nick & Nora", name:"Upper West Side Martini", ing:[["2 oz","Faber Citrus Vodka"],[".5 oz","Mint Simple Syrup"],["1 oz","Lemon Juice"],["3 pinch","Mint Leaf"],["1 oz","Champagne Float"]], build:"Muddle mint leaf and simple, quick muddle. Add vodka and lemon, shake. Double strain into Nick & Nora. Champagne float. Single mint leaf garnish."},
+{cat:"Vodka", glass:"Nick & Nora", name:"Appletini", ing:[["1 oz","Stateside Vodka"],[".5 oz","Boulard Calvados Brandy VSOP"],[".75 oz","Le Verger French Apple Liqueur"],[".25 oz","Lemon Juice"],[".25 oz","Simple Syrup"],["1 oz","Apple Juice"]], build:"Shaken. Double strained. Nick & Nora. Dehydrated apple chip."},
+{cat:"Vodka", glass:"Nick & Nora", name:"Espresso Martini", ing:[["—","Vodka-Infused Arabica Coffee Beans"],["—","Crème De Cacao"],["—","Kahlúa Liqueur"],["opt.","Baileys Irish Cream"]], build:"Batch cocktail. Black: 3 oz pour, shaken. With cream: reduce batch to 2.5 oz, add .5 oz Baileys. Long shake. Double strain. Nick & Nora. Three espresso beans."},
+
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe", name:"Tipperary", ing:[["2 oz","Glendalough Irish Whiskey"],["1 oz","Dolin Sweet Vermouth"],[".5 oz","Green Chartreuse"],["2 dash","Angostura Bitters"]], build:"Mixing glass, long stir. Strain into coupe. Express orange zest and discard."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe", name:"The 1904", ing:[["2 oz","Yellow Spot Irish Whiskey"],["1 oz","Antica Formula Sweet Vermouth"],[".5 oz","Green Chartreuse VEP"],["2 dash","Angostura Bitters"]], build:"Mixing glass, long stir. Strain into coupe. Express orange zest and discard."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Rocks Glass", name:"Old Fashion", ing:[["2 oz","Kinsey Rye"],["1 tbsp","Cherry Infused Brandy"],["4 dash","Angostura Bitters"],[".25 oz","Simple Syrup"],["—","Expressed Orange Peel"]], build:"Muddle orange wedge and cherry in mixing glass. Add whiskey, simple, brandy and bitters. Short stir. Double strain over fresh ice in rocks glass. Express orange peel, leave on rim with skewered cherry."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe (Absinthe rinse)", name:"Sazerac", ing:[["2 oz","Rittenhouse Rye"],["1 oz","Remy Brandy VSOP"],[".5 oz","Simple Syrup"],["3 dash","Angostura Bitters"],["6 dash","Peychaud's Bitters"],["—","Vieux Carré Absinthe Spritz"]], build:"Mixing glass. Long stir. Strain into coupe spritzed with three pumps of absinthe. Express lemon peel, leave on rim."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe", name:"Boulevardier", ing:[["2 oz","Kinsey Rye"],[".5 oz","Campari"],[".25 oz","Carpano Antica Formula"],[".25 oz","Benedictine"]], build:"Mixing glass. Long stir. Strain into coupe. Express orange peel, leave on rim."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Collins Glass", name:"Whiskey Sour", ing:[["1.5 oz","Common Well Blended Whiskey"],[".5 oz","Lemon Juice"],[".5 oz","Lime Juice"],[".5 oz","Simple Syrup"],["3 dash","Angostura Bitters"],["1","Egg White"],["1 tbsp","Cherry Infused Brandy Float"]], build:"Dry and wet shake all ingredients. Strain over fresh ice in Collins glass. Float cherry brandy. Skewered cherry."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Nick & Nora", name:"Summer Manhattan", ing:[["2.5 oz","Jefferson Small Batch Bourbon"],[".5 oz","Cointreau"],["4 dash","Orange Bitters"],["—","Expressed Orange Peel"]], build:"Mixing glass. Long stir. Strain into Nick & Nora. Express orange zest, leave on rim."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe", name:"Paper Plane", ing:[["1 oz","Bulleit Bourbon"],["1 oz","Aperol"],["1 oz","Amaro Nonino Quintessentia"],["1 oz","Lemon Juice"]], build:"Shaken. Double strain. Coupe. Paper plane garnish on rim using miniature clothespin."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Nick & Nora", name:"Psycho Killer", ing:[["2 oz","Glendalough Irish Whiskey"],[".75 oz","Cocoa Nib-Infused Campari"],[".5 oz","White Crème De Cacao"],[".5 oz","Tempus Fugit Banane Liqueur"],["2 dash","Vieux Carré Absinthe"]], build:"Mixing glass. Long stir. Strain into Nick & Nora. No garnish."},
+{cat:"Whiskey, Bourbon & Rye", glass:"Coupe", name:"Ombibulous", ing:[["2 oz","Woodford Reserve Bourbon"],[".75 oz","Amaro Sfumato Rabarbaro"],[".25 oz","Luxardo Maraschino Liqueur"],[".5 oz","Rothman & Winter Cherry Liqueur"],["—","Expressed Orange Peel"]], build:"Mixing glass. Stir. Strain. Coupe. Express orange zest, leave on rim."},
+
+{cat:"Gin", glass:"Coupe", name:"Aviation", ing:[["2 oz","Aviation Gin"],[".5 oz","Luxardo Maraschino Liqueur"],[".25 oz","Rothman & Winter Crème De Violette"],[".5 oz","Lemon Juice"],[".25 oz","Simple Syrup"]], build:"Shaken. Double strain. Coupe. Skewered cherry."},
+{cat:"Gin", glass:"Coupe", name:"Last Word", ing:[["1 oz","Botanist Gin"],["1 oz","Green Chartreuse"],["1 oz","Luxardo Maraschino Liqueur"],["1 oz","Lime Juice"]], build:"Shaken. Double strain. Coupe. Skewered cherry."},
+{cat:"Gin", glass:"Sour Glass", name:"Clover Club", ing:[["1.5 oz","Bluecoat Gin"],[".5 oz","Dolin Dry Vermouth De Chambery"],[".5 oz","Lemon Juice"],[".75 oz","Raspberry Syrup"],["1","Egg White"]], build:"Dry and wet shake. Strain into sour glass. Garnish with dehydrated raspberry powder on one half of top surface."},
+{cat:"Gin", glass:"Coupe", name:"Sassafras Gimlet", ing:[["2 oz","Gin Infused Ruby Red Grapefruit"],["1 oz","Lime Juice"],[".75 oz","Simple Syrup"],["3 dash","Grapefruit Bitters"]], build:"Shaken. Double strain. Coupe. Lime chip."},
+{cat:"Gin", glass:"Coupe", name:"Corpse Reviver #2", ing:[["1 oz","Plymouth Gin"],["1 oz","Cointreau Liqueur"],["1 oz","Cocchi Americano Aperitif"],["1 oz","Lemon Juice"],["5 spritz","Vieux Carré Absinthe"],["—","Expressed Lemon Peel"]], build:"Shaken. Double strain. Coupe. Spritz glass with absinthe, express lemon zest on surface, leave on rim."},
+{cat:"Gin", glass:"Nick & Nora", name:"Vesper Martini", ing:[["1.5 oz","Plymouth Gin"],["1 oz","Stateside Vodka"],[".5 oz","Cocchi Americano"],["—","Expressed Lemon Peel"]], build:"Mixing glass. Long stir. Nick & Nora. Express lemon zest, leave on rim."},
+{cat:"Gin", glass:"Coupe", name:"Negroni", ing:[["1.5 oz","Bluecoat Barrel Finished Gin"],[".75 oz","Punt e Mes Vermouth"],[".75 oz","Campari Liqueur"],["—","Expressed Orange Peel"]], build:"Mixing glass. Long stir. Strain into coupe. Express orange zest, leave on rim."},
+{cat:"Gin", glass:"Coupe", name:"St. Rick", ing:[["2 oz","Hendricks Gin"],["1 oz","St-Germain Elderflower Liqueur"],[".5 oz","Cucumber Juice"],[".5 oz","Lime Juice"],["—","Basil Leaf"]], build:"Shaken. Double strain. Coupe. Sliced cucumber garnish."},
+{cat:"Gin", glass:"Collins Glass", name:"Sloe Gin Fizz", ing:[["1 oz","Botanist Gin"],["1 oz","Hayman's Sloe Gin"],[".5 oz","Lemon Juice"],[".5 oz","Simple Syrup"],["1","Egg White"],["—","Expressed Lemon Peel"]], build:"Dry and wet shake. Strain over fresh ice in Collins glass. Express lemon zest, leave on rim."},
+{cat:"Gin", glass:"Coupe", name:"Bees Knees", ing:[["2 oz","Barr Hill Gin"],[".75 oz","Lemon Juice"],[".5 oz","Honey Tarragon Syrup"],[".25 oz","Lavender Syrup"],["1 tsp","Cherry Infused Brandy"]], build:"Shaken. Double strained. Coupe. Skewered cherry, pour 1 tsp cherry brandy over cherry."},
+
+{cat:"Rum", glass:"Collins Glass", name:"Dark & Stormy", ing:[["1.5 oz","Goslings Black Seal Rum"],["1 oz","Velvet Falernum Liqueur"],[".75 oz","Ginger Press"],[".5 oz","Lime Juice"],["2 oz","Ginger Ale"]], build:"Build in Collins glass. Short stir. Float Goslings rum. Lime chip."},
+{cat:"Rum", glass:"Goblet", name:"Mai Tai", ing:[["1 oz","Goslings Black Seal Bermuda Rum"],["1 oz","Mount Gay Barbados Rum"],[".5 oz","Cointreau Orange Liqueur"],["1 oz","Lime Juice"],["1 oz","Orgeat Syrup"],["2 dash","Angostura Bitters"]], build:"Shake and dump into goblet glass. Float Goslings. Lime chip and mint sprig."},
+{cat:"Rum", glass:"Coupe", name:"Hemingway Daiquiri", ing:[["2 oz","Single Prop Caribbean Rum"],[".5 oz","Luxardo Maraschino Liqueur"],[".5 oz","Lime Juice"],[".75 oz","Grapefruit Juice"],[".25 oz","Simple Syrup"]], build:"Shaken. Double strain. Coupe. Lime chip."},
+{cat:"Rum", glass:"Collins Glass", name:"Coconut Mojito", ing:[["2 oz","Bacardi Coconut Rum"],["1 oz","Lime Juice"],["1 oz","Mint Syrup"],["1 dash","Mint Bitters"],["2","Lime Wedges"],["1 sprig","Mint Leaf"],["2 oz","Club Soda Water"]], build:"Muddle lime wedges and mint leaf with mint syrup. Shaken. Partial dump into Collins glass. Top with club soda. Lime chip."},
+{cat:"Rum", glass:"Rocks Glass", name:"Jungle Bird", ing:[["1.5 oz","Goslings Black Seal Bermuda Rum"],[".75 oz","Campari Liqueur"],["1.5 oz","Pineapple Juice"],[".5 oz","Lime Juice"],[".5 oz","Pure Cane Syrup"]], build:"Shaken. Double strain into rocks glass. Lime chip."},
+
+{cat:"Champagne", glass:"Champagne Glass", name:"Lavender Champagne", ing:[["6 oz","Champagne"],[".25 oz","Lavender Syrup"],["3","Blueberries"]], build:"Build in champagne glass. Add lavender syrup, top with champagne. Float 3 blueberries."},
+{cat:"Champagne", glass:"Champagne Flute", name:"French 75", ing:[["1.5 oz","New Amsterdam Gin"],[".5 oz","Lemon Juice"],[".5 oz","Simple Syrup"],["3 oz","Champagne"],["3 dash","Orange Bitters"]], build:"Shake gin, lemon, simple, and bitters. Strain into champagne flute. Top with champagne. Express lemon zest, leave on rim."},
+{cat:"Champagne", glass:"Wine Glass", name:"Hugo Spritz", ing:[["1.5 oz","St-Germain Elderflower Liqueur"],["4 oz","Champagne"],["1 sprig","Mint Leaf"],["2 dash","Mint Bitters"],["1 oz","Club Soda Water"]], build:"Gentle muddle mint leaf and St-Germain in wine glass. Add ice, champagne, mint bitters and club soda. Short stir. Garnish with mint sprig."},
+{cat:"Champagne", glass:"Champagne Flute", name:"Lone Ranger", ing:[["1.5 oz","Olmeca Altos Plata Tequila"],["1 oz","Lemon Juice"],[".5 oz","Simple Syrup"],["2 oz","Cava Sparkling Rosé"],["—","Lemon Twist"]], build:"Shake tequila, simple, and lemon. Strain into champagne flute. Top with champagne. Express lemon zest, leave on rim."},
+{cat:"Champagne", glass:"Champagne Flute", name:"Death in the Afternoon", ing:[["1.5 oz","Vieux Carré Absinthe"],[".25 oz","Simple Syrup"],["3.5 oz","Champagne"]], build:"Build in champagne flute. Add absinthe and simple, slowly pour chilled champagne. No garnish."},
+
+{cat:"Brandy", glass:"Coupe", name:"Sidecar", ing:[["2 oz","St Remy VSOP Brandy"],["1 oz","Cointreau Liqueur"],[".5 oz","Lemon Juice"],[".25 oz","Honey Syrup"],["—","Lemon Twist"]], build:"Shaken. Double strained. Coupe. Half sugared rim. Express lemon zest, leave on rim."},
+{cat:"Brandy", glass:"Coupe", name:"Champs-Élysées", ing:[["2 oz","St Remy VSOP Brandy"],[".5 oz","Green Chartreuse"],[".75 oz","Lemon Juice"],[".25 oz","Simple Syrup"],["2 dash","Angostura Bitters"],["—","Lemon Twist"]], build:"Shaken. Double strain into coupe. Express lemon zest, leave on rim."},
+{cat:"Brandy", glass:"Sour Glass", name:"Pisco Sour", ing:[["2 oz","Caravedo Pisco"],[".5 oz","Lemon Juice"],[".5 oz","Lime Juice"],["1 oz","Simple Syrup"],["1","Egg White"]], build:"Dry and wet shake. Strain into sour glass. 4 drops Angostura bitters garnish."},
+{cat:"Brandy", glass:"Rocks Glass", name:"Caipirinha Framboesa", ing:[["2 oz","Novo Fogo Silver Cachaça"],[".5 oz","Lime Juice"],[".25 oz","Simple Syrup"],[".75 oz","Raspberry Syrup"],["3","Lime Wedges"]], build:"Muddle lime wedges in shaker. Add ingredients, short shake. Partial dump into rocks glass. Lime chip."},
+{cat:"Brandy", glass:"Coupe", name:"Between the Sheets", ing:[["1 oz","St Remy VSOP Brandy"],["1 oz","Single Prop Caribbean Rum"],["1 oz","Cointreau Liqueur"],[".5 oz","Lemon Juice"]], build:"Shaken. Double strain into coupe. Flamed orange zest, leave on rim."},
+{cat:"Brandy", glass:"Rocks Glass", name:"French Connection", ing:[["1.5 oz","Remy Martin 1783 Cognac"],["1 oz","Disaronno Amaretto"]], build:"Pour neat into rocks glass. Short stir. One large cube. No garnish."},
+
+{cat:"Scotch", glass:"Crystal Rocks Glass", name:"Ard-Righ", ing:[["2 oz","Macallan Rare Cask"],[".25 oz","Green Chartreuse VEP"],[".25 oz","Yellow Chartreuse MOF"],["1 dash","Orange Bitters"]], build:"Mixing glass, long stir. Strain into crystal rocks glass. One large cube, stamped."},
+{cat:"Scotch", glass:"Collins Glass", name:"Penicillin", ing:[["2 oz","Dewars Scotch"],["1.5 oz","Honey Syrup"],[".75 oz","Lemon Juice"],[".5 oz","Ginger Press"],["—","Laphroaig Scotch Spritz"]], build:"Shake. Dump into Collins glass. 3 spritz Laphroaig on surface. Lemon chip."},
+{cat:"Scotch", glass:"Coupe", name:"Blood & Sand", ing:[["1 oz","Monkey Shoulder Scotch"],["1 oz","Punt e Mes Vermouth"],["1 oz","Rothman & Winter Cherry Liqueur"],["1 oz","Orange Juice"]], build:"Shaken. Double strain. Coupe. Flamed expressed orange zest, leave on rim."},
+{cat:"Scotch", glass:"Coupe", name:"Churchill", ing:[["2 oz","Monkey Shoulder Scotch"],[".5 oz","Cointreau Liqueur"],[".5 oz","Dolin Rouge Sweet Vermouth"],[".5 oz","Lime Juice"]], build:"Shaken. Coupe. Lime chip."},
+{cat:"Scotch", glass:"Coupe", name:"Prophet in Plain Clothes", ing:[["1 oz","Laphroaig 10 yr Scotch"],["1 oz","Fernet Branca Liqueur"],["1 oz","Dolin Rouge Sweet Vermouth"],[".5 oz","Amaro Montenegro"]], build:"Mixing glass. Long stir. Coupe. Skewered cherry."},
+];
+
+let deck = DATA.map((d,i)=>({...d, idx:i}));
+let order = deck.map((_,i)=>i);
+let pos = 0;
+let flipped = false;
+let activeCat = "All";
+let favOnly = false;
+let favorites = new Set();
+let storageReady = false;
+
+const categories = ["All", ...new Set(DATA.map(d=>d.cat))];
+
+const filtersEl = document.getElementById('filters');
+categories.forEach(cat=>{
+  const b = document.createElement('button');
+  b.className = 'chip' + (cat==='All' ? ' active' : '');
+  b.textContent = cat;
+  b.onclick = ()=> setFilter(cat);
+  filtersEl.appendChild(b);
+});
+
+async function loadFavorites(){
+  try{
+    const raw = localStorage.getItem('sassafras-favorites');
+    if(raw){
+      const arr = JSON.parse(raw);
+      favorites = new Set(arr);
+    }
+  }catch(err){
+    // no saved favorites yet — that's fine, start empty
+    favorites = new Set();
+  }
+  storageReady = true;
+  rebuildOrder();
+  render();
+}
+
+async function saveFavorites(){
+  try{
+    localStorage.setItem('sassafras-favorites', JSON.stringify([...favorites]));
+  }catch(err){
+    console.error('Could not save favorites:', err);
+  }
+}
+
+function rebuildOrder(){
+  order = deck.filter(d=>
+    (activeCat === 'All' || d.cat === activeCat) &&
+    (!favOnly || favorites.has(d.idx))
+  ).map(d=>d.idx);
+  pos = 0;
+}
+
+function setFilter(cat){
+  activeCat = cat;
+  [...filtersEl.children].forEach(c=> c.classList.toggle('active', c.textContent===cat));
+  rebuildOrder();
+  render();
+}
+
+function toggleFavorite(){
+  const item = deck[order[pos]];
+  if(item === undefined) return;
+  if(favorites.has(item.idx)) favorites.delete(item.idx);
+  else favorites.add(item.idx);
+  saveFavorites();
+  updateFavUI();
+  if(favOnly){ rebuildOrder(); }
+  render();
+}
+
+function updateFavUI(){
+  document.getElementById('favCount').textContent = `(${favorites.size})`;
+}
+
+function render(){
+  const card = document.getElementById('card');
+  const stage = document.querySelector('.stage');
+  updateFavUI();
+
+  if(!storageReady){
+    card.style.display = 'none';
+    let loading = document.getElementById('loadingState');
+    if(!loading){
+      loading = document.createElement('div');
+      loading.id = 'loadingState';
+      loading.className = 'empty-state';
+      loading.textContent = "Loading your saved favorites…";
+      stage.appendChild(loading);
+    }
+    return;
+  } else {
+    const loading = document.getElementById('loadingState');
+    if(loading) loading.remove();
+  }
+
+  if(order.length === 0){
+    card.style.display = 'none';
+    document.querySelectorAll('.navrow button').forEach(b=> b.disabled = true);
+    document.getElementById('catLabel').textContent = activeCat;
+    document.getElementById('idxNum').textContent = 0;
+    document.getElementById('idxTotal').textContent = 0;
+    let empty = document.getElementById('emptyState');
+    if(!empty){
+      empty = document.createElement('div');
+      empty.id = 'emptyState';
+      empty.className = 'empty-state';
+      empty.textContent = "No favorites yet. Flip a card and tap the star to save it here for studying.";
+      stage.appendChild(empty);
+    }
+    return;
+  } else {
+    const empty = document.getElementById('emptyState');
+    if(empty) empty.remove();
+    card.style.display = '';
+    document.querySelectorAll('.navrow button').forEach(b=> b.disabled = false);
+  }
+
+  card.classList.remove('flipped');
+  flipped = false;
+  const item = deck[order[pos]];
+
+  document.getElementById('fTag').textContent = item.cat;
+  document.getElementById('fName').textContent = item.name;
+  document.getElementById('fGlass').textContent = item.glass;
+
+  document.getElementById('bTag').textContent = item.cat;
+  document.getElementById('bName').textContent = item.name;
+  document.getElementById('bBuild').textContent = item.build;
+
+  const isFav = favorites.has(item.idx);
+  ['starFront','starBack'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.textContent = isFav ? '★' : '☆';
+    el.classList.toggle('on', isFav);
+  });
+
+  const ul = document.getElementById('bIng');
+  ul.innerHTML = '';
+  item.ing.forEach(([amt,name])=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="name">${name}</span><span class="amt">${amt}</span>`;
+    ul.appendChild(li);
+  });
+
+  document.getElementById('catLabel').textContent = activeCat;
+  document.getElementById('idxNum').textContent = pos+1;
+  document.getElementById('idxTotal').textContent = order.length;
+}
+
+document.getElementById('card').addEventListener('click', ()=>{
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+});
+
+document.getElementById('prevBtn').onclick = (e)=>{
+  e.stopPropagation();
+  pos = (pos - 1 + order.length) % order.length;
+  render();
+};
+document.getElementById('nextBtn').onclick = (e)=>{
+  e.stopPropagation();
+  pos = (pos + 1) % order.length;
+  render();
+};
+document.getElementById('shuffleBtn').onclick = (e)=>{
+  e.stopPropagation();
+  for(let i=order.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [order[i],order[j]]=[order[j],order[i]];
+  }
+  pos = 0;
+  render();
+};
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight'){ document.getElementById('nextBtn').click(); }
+  if(e.key==='ArrowLeft'){ document.getElementById('prevBtn').click(); }
+  if(e.key===' '){ e.preventDefault(); document.getElementById('card').click(); }
+  if(e.key.toLowerCase()==='f'){ toggleFavorite(); }
+});
+
+['starFront','starBack'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', (e)=>{
+    e.stopPropagation();
+    toggleFavorite();
+  });
+});
+
+document.getElementById('favToggle').addEventListener('click', ()=>{
+  favOnly = !favOnly;
+  document.getElementById('favToggle').classList.toggle('on', favOnly);
+  document.getElementById('favToggle').firstChild.textContent = favOnly ? '★ Favorites Only ' : '☆ Favorites Only ';
+  rebuildOrder();
+  render();
+});
+
+document.getElementById('resetFav').addEventListener('click', async ()=>{
+  if(favorites.size === 0) return;
+  if(!confirm('Clear all favorited cocktails?')) return;
+  favorites = new Set();
+  await saveFavorites();
+  if(favOnly){ rebuildOrder(); }
+  updateFavUI();
+  render();
+});
+
+loadFavorites();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* offline support unavailable, app still works online */ });
+  });
+}
+</script>
+</body>
+</html>
